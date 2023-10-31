@@ -1,25 +1,55 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState, useEffect } from 'react';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+        <WebSocketComponent />
     </div>
   );
 }
+
+const WebSocketComponent = () => {
+  const [message, setMessage] = useState('');
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    const ws = new WebSocket('wss://ws.postman-echo.com/raw');
+
+    ws.onopen = () => {
+      console.log('WebSocket connection opened.');
+      setSocket(ws);
+    };
+
+    ws.onmessage = (event) => {
+      const receivedMessage = event.data;
+      setMessage(receivedMessage);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed.');
+    };
+
+    return () => {
+      if (socket) {
+        socket.close();
+      }
+    };
+  });
+
+  const sendRandomString = () => {
+    if (socket) {
+      const randomString = Math.random().toString(36).substring(7);
+      socket.send(randomString);
+    }
+  };
+
+  return (
+    <div>
+      <h2>WebSocket Echo Client</h2>
+      <button onClick={sendRandomString}>Send Random String</button>
+      <p>Received: {message}</p>
+    </div>
+  );
+};
 
 export default App;
